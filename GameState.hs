@@ -86,7 +86,7 @@ board cellLists =
           rows = mkIntMap (map mkIntMap cellLists) }
   where mkIntMap = DIM.fromList . zip [0..]
         theRobotPos = toRobotPos $ do
-          (x, Just y) <- find (isJust . snd) $
+          (y, Just x) <- find (isJust . snd) $
                          zip [0..] $ map (elemIndex Robot) cellLists
           return (x, y)
 
