@@ -8,3 +8,9 @@ The description of the task is here:
 And the full specification is here:
 
     http://www-fp.cs.st-andrews.ac.uk/~icfppc/task.pdf
+
+== Build Instructions ==
+
+    runhaskell Setup.hs configure
+    runhaskell Setup.hs build
+    ./dist/build/lifter/lifter < maps/contest1.map
