@@ -14,7 +14,8 @@ module GameState (Cell(..),
                   setCellAt,
                   prettyBoard,
                   Move(..),
-                  move) where
+                  move,
+                  updateMap) where
 
 import Data.IntMap (IntMap)
 import qualified Data.IntMap as DIM
@@ -177,3 +178,17 @@ move b m = maybe b go (robotXY b)
               Lift Open -> (0, 50 * lambdasCollected b)
               _ -> if m == A then (0, 25 * lambdasCollected b) else (0,0)
 
+updateMap :: Board -> Board
+updateMap b = updateMapAt b 1 1
+  where updateMapAt b x y | x > width b  = updateMapAt b 1 (y+1)
+                          | y > height b = b
+                          | otherwise = do
+                              let b' = updateMapFor x y (cellAt b x y)
+                              updateMapAt b' (x+1) y
+
+        updateMapFor x y Rock = do
+          let cellBelow = cellAt b x (y-1)
+          if cellBelow == Empty
+            then setCellAt b x (y-1) Rock
+            else b
+        updateMapFor _ _ _     = b

@@ -3,7 +3,9 @@ module GameStateTests where
 import Control.Applicative (liftA2)
 import Data.Maybe (catMaybes)
 import Test.Framework (Test, testGroup)
+import Test.Framework.Providers.HUnit (testCase)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
+import Test.HUnit (assertEqual)
 import Test.QuickCheck
 
 import GameState
@@ -18,7 +20,8 @@ test = testGroup "Game state tests" [
   testProperty "expected-board-height" prop_boardHeight,
   testProperty "expected-board-contents" prop_boardContents,
   testProperty "cell-setting changes at most one cell" prop_setCell,
-  testProperty "wait does not move robot" prop_wait
+  testProperty "wait does not move robot" prop_wait,
+  testCase     "simple rock update" test_updateMap1
   ]
 
 prop_cellToCharAndBack :: Cell -> Bool
@@ -72,6 +75,22 @@ prop_wait :: [[Cell]] -> Bool
 prop_wait cellLists =
     let b = board cellLists
     in move b W == (maybe b (const $ b { score = score b - 1 }) (robotXY b))
+
+map1Start :: Board
+map1Start = board $ map stringToCells [
+  "   ",
+  " * ",
+  "   "
+  ]
+
+map1End :: Board
+map1End = board $ map stringToCells [
+  "   ",
+  "   ",
+  " * "
+  ]
+
+test_updateMap1 = assertEqual "test" (prettyBoard (updateMap map1Start)) (prettyBoard map1End)
 
 expandedCoords :: [[Cell]] -> Gen (Int,Int)
 expandedCoords cellLists = liftA2 (,) cols rows
