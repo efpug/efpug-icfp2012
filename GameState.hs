@@ -3,9 +3,10 @@ module GameState (Cell(..),
                   charToCell,
                   cellToChar,
                   stringToCells,
-                  Board,
+                  Board(score),
                   width,
                   height,
+                  robotXY,
                   board,
                   cellAt,
                   setCellAt,
@@ -63,7 +64,7 @@ data Board =
           score :: !Int,
           lambdasCollected :: !Int,
           lambdasRemaining :: !Int,
-          rows :: IntMap (IntMap Cell) } deriving (Show)
+          rows :: IntMap (IntMap Cell) } deriving (Eq, Show)
 
 data RobotPos = NoRobot | RobotAt !Int !Int deriving (Eq, Show)
 
