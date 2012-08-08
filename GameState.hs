@@ -5,9 +5,10 @@ module GameState (Cell(..),
                   cellToChar,
                   charToMove,
                   stringToCells,
-                  Board,
+                  Board(score),
                   width,
                   height,
+                  robotXY,
                   board,
                   cellAt,
                   setCellAt,
@@ -87,7 +88,7 @@ data Board =
           score :: !Int,
           lambdasCollected :: !Int,
           lambdasRemaining :: !Int,
-          rows :: IntMap (IntMap Cell) } deriving (Show)
+          rows :: IntMap (IntMap Cell) } deriving (Eq, Show)
 
 data RobotPos = NoRobot | RobotAt !Int !Int deriving (Eq, Show)
 
@@ -110,7 +111,7 @@ board cellLists =
           rows = mkIntMap (map mkIntMap cellLists) }
   where mkIntMap = DIM.fromList . zip [0..]
         theRobotPos = toRobotPos $ do
-          (x, Just y) <- find (isJust . snd) $
+          (y, Just x) <- find (isJust . snd) $
                          zip [0..] $ map (elemIndex Robot) cellLists
           return (x, y)
 
@@ -141,36 +142,38 @@ data Move = L |
             W |
             A deriving (Eq, Show)
 
-moveDelta :: Move -> Maybe (Int,Int)
-moveDelta L = Just (negate 1, 0)
-moveDelta R = Just (1, 0)
-moveDelta U = Just (0, 1)
-moveDelta D = Just (0, negate 1)
-moveDelta W = Just (0, 0)
-moveDelta A = Nothing
+moveDelta :: Move -> (Int,Int)
+moveDelta L = (negate 1, 0)
+moveDelta R = (1, 0)
+moveDelta U = (0, 1)
+moveDelta D = (0, negate 1)
+moveDelta W = (0, 0)
+moveDelta A = (0, 0)
 
-move :: Board -> Move -> Maybe Board
-move b m = do
-  (rx, ry) <- robotXY b
-  (dx, dy) <- moveDelta m
-  let unobstructed = c == Empty || c == Earth || c == Lambda || c == Lift Open
-      movesRock = dy == 0 && c == Rock && cellAt b rx'' ry' == Empty
-      b'   = setCellAt b rx ry Empty
-      b''  = setCellAt b' rx' ry' Robot
-      b''' = if movesRock then setCellAt b'' rx'' ry' Rock else b''
-      c = cellAt b rx' ry'
-      rx'  = rx + dx
-      ry'  = ry + dy
-      rx'' = rx' + dx
-      (dLambdas, dScore) = case c of
-        Lambda -> (1, 25)
-        Lift Open -> (0, 50 * lambdasCollected b)
-        _ -> if m == A then (0, 25 * lambdasCollected b) else (0,0)
-  b'''' <- if dx == 0 && dy == 0
-           then Just b
-           else if unobstructed || movesRock
-                then Just b'''
-                else Nothing
-  return b'''' { score = score b'''' + dScore - 1,
-                 lambdasRemaining = lambdasRemaining b'''' - dLambdas,
-                 lambdasCollected = lambdasCollected b'''' + dLambdas }
+move :: Board -> Move -> Board
+move b m = maybe b go (robotXY b)
+    where
+      go (rx,ry) =
+          b'''' { score = score b'''' + dScore - 1,
+                  lambdasRemaining = lambdasRemaining b'''' - dLambdas,
+                  lambdasCollected = lambdasCollected b'''' + dLambdas }
+          where
+            (dx, dy) = moveDelta m
+            unobstructed = elem c [Empty, Earth, Lambda, Lift Open]
+            movesRock = dy == 0 && c == Rock && cellAt b rx'' ry' == Empty
+            isMove = (dx /= 0 || dy /= 0) && (unobstructed || movesRock)
+
+            b'    = setCellAt b rx ry Empty
+            b''   = setCellAt b' rx' ry' Robot
+            b'''  = if movesRock then setCellAt b'' rx'' ry' Rock else b''
+            b'''' = if isMove then b''' else b
+
+            c = cellAt b rx' ry'
+            rx'  = rx + dx
+            ry'  = ry + dy
+            rx'' = rx' + dx
+            (dLambdas, dScore) = case c of
+              Lambda -> (1, 25)
+              Lift Open -> (0, 50 * lambdasCollected b)
+              _ -> if m == A then (0, 25 * lambdasCollected b) else (0,0)
+

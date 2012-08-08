@@ -17,7 +17,8 @@ test = testGroup "Game state tests" [
   testProperty "expected-board-width" prop_boardWidth,
   testProperty "expected-board-height" prop_boardHeight,
   testProperty "expected-board-contents" prop_boardContents,
-  testProperty "cell-setting changes at most one cell" prop_setCell
+  testProperty "cell-setting changes at most one cell" prop_setCell,
+  testProperty "wait does not move robot" prop_wait
   ]
 
 prop_cellToCharAndBack :: Cell -> Bool
@@ -66,6 +67,11 @@ prop_setCell cellLists =
         height b' == height b &&
         (x < 0 || x >= width b || y < 0 || y >= height b || cellAt b' x y == c) &&
         all expectedContent [(x',y') | x' <- [0..width b], y' <- [0..height b]]
+
+prop_wait :: [[Cell]] -> Bool
+prop_wait cellLists =
+    let b = board cellLists
+    in move b W == (maybe b (const $ b { score = score b - 1 }) (robotXY b))
 
 expandedCoords :: [[Cell]] -> Gen (Int,Int)
 expandedCoords cellLists = liftA2 (,) cols rows
