@@ -1,7 +1,7 @@
 module Main where
 
 import Control.Applicative ((<$>))
-import System.IO (hIsEOF, hGetLine, stdin)
+import System.IO (hGetLine, stdin)
 import System.Environment
 import GameState
 
@@ -9,11 +9,13 @@ fullGameLoop :: Board -> IO ()
 fullGameLoop board = do
   mMove <- getMoveFromStdin
   case mMove of
-    Just move -> do
-      newBoard <- (return (gameLoop move board))
-      putStrLn $ [ moveToChar move ] 
-      putStrLn $ prettyBoard newBoard
-      fullGameLoop newBoard
+    Just move -> 
+      let newBoard = gameLoop move board in
+        do
+          putStrLn $ [ moveToChar move ] 
+          putStrLn $ prettyBoard newBoard
+          fullGameLoop newBoard
+      
     Nothing ->
       fullGameLoop board
   
@@ -27,8 +29,10 @@ main = do
 getMoveFromStdin :: IO (Maybe Move)
 getMoveFromStdin = do 
   l <- hGetLine stdin
-  return (charToMove (head l))
-
+  return (case l of
+             [] -> Nothing
+             x:xs -> charToMove x)
+    
 readBoard :: String -> IO Board
 readBoard file = board <$> readCellLists
   where readCellLists = do
@@ -37,4 +41,5 @@ readBoard file = board <$> readCellLists
 
 -- Do nothing --
 gameLoop :: Move -> Board -> Board
-gameLoop move board = board
+gameLoop ourMove board = 
+  move board ourMove
