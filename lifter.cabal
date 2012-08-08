@@ -27,6 +27,14 @@ executable verifier
                        containers >= 0.4 && < 1
   ghc-options:         -W
 
+executable manual
+  main-is:             manual.hs
+  other-modules:       GameState
+  build-depends:       base ==4.5.*,
+                       containers >= 0.4 && < 1
+  ghc-options:         -W
+
+
 Test-Suite tests
   type:                 exitcode-stdio-1.0
   main-is:              test/Main.hs
