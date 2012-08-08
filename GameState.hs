@@ -107,18 +107,18 @@ board cellLists =
           lambdasCollected = 0,
           lambdasRemaining = sum $ map (length . filter (==Lambda)) cellLists,
           rows = mkIntMap (map mkIntMap cellLists) }
-  where mkIntMap = DIM.fromList . zip [0..]
+  where mkIntMap = DIM.fromList . zip [1..]
         theRobotPos = toRobotPos $ do
           (y, Just x) <- find (isJust . snd) $
                          zip [0..] $ map (elemIndex Robot) cellLists
-          return (x, y)
+          return (x + 1, y + 1)
 
 cellAt :: Board -> Int -> Int -> Cell
 cellAt b x y = maybe Empty (maybe Empty id . DIM.lookup x) (DIM.lookup y $ rows b)
 
 setCellAt :: Board -> Int -> Int -> Cell -> Board
 setCellAt b x y c
-  | 0 <= x && x < width b && 0 <= y && y < height b =
+  | 0 < x && x <= width b && 0 < y && y <= height b =
     b { rows = DIM.alter alterRow y $ rows b }
   | otherwise = b
   where alterRow Nothing = Just $ DIM.singleton x c

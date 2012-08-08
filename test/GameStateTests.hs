@@ -51,8 +51,8 @@ prop_boardContents cellLists =
   where b = board cellLists
         cellAt' x y = maybe Empty (maybe Empty id . elemAt x) $ elemAt y cellLists
         elemAt _ [] = Nothing
-        elemAt 0 (x:_) = Just x
-        elemAt n (_:rest) | n > 0 = elemAt (n-1) rest
+        elemAt 1 (x:_) = Just x
+        elemAt n (_:rest) | n > 1 = elemAt (n-1) rest
                           | otherwise = Nothing
 
 prop_setCell :: [[Cell]] -> Property
