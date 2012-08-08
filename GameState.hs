@@ -1,7 +1,9 @@
 module GameState (Cell(..),
                   LiftState(..),
                   charToCell,
+                  moveToChar,
                   cellToChar,
+                  charToMove,
                   stringToCells,
                   Board,
                   width,
@@ -40,6 +42,15 @@ charToCell c | c == '#' = Just Wall
              | c == 'R' = Just Robot
              | otherwise = Nothing
 
+charToMove :: Char -> Maybe Move
+charToMove m | m == 'A' = Just A
+             | m == 'L' = Just L
+             | m == 'R' = Just R
+             | m == 'D' = Just D
+             | m == 'U' = Just U
+             | m == 'W' = Just W
+             | otherwise = Nothing
+
 cellToChar :: Cell -> Char
 cellToChar cell = case cell of
   Wall        -> '#'
@@ -50,6 +61,19 @@ cellToChar cell = case cell of
   Lift Closed -> 'L'
   Lift Open   -> 'O'
   Robot       -> 'R'
+
+
+moveToChar :: Move -> Char
+moveToChar move = case move of
+  W        -> 'W'
+  U        -> 'U'
+  D        -> 'D'
+  R        -> 'R'
+  A        -> 'A'
+  L        -> 'L'
+
+
+
 
 -- | Converts a string to a list of cells, stopping at the first
 -- invalid character.
