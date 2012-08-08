@@ -1,6 +1,6 @@
 module GameStateTests where
 
-import Control.Applicative (liftA2)
+import Control.Applicative (liftA2, (<$>))
 import Data.Maybe (catMaybes)
 import Test.Framework (Test, testGroup)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
@@ -68,10 +68,9 @@ prop_setCell cellLists =
         (x < 0 || x >= width b || y < 0 || y >= height b || cellAt b' x y == c) &&
         all expectedContent [(x',y') | x' <- [0..width b], y' <- [0..height b]]
 
-prop_wait :: [[Cell]] -> Bool
-prop_wait cellLists =
-    let b = board cellLists
-    in move b W == (maybe b (const $ b { score = score b - 1 }) (robotXY b))
+prop_wait :: Property
+prop_wait = forAll simpleMap $ \b ->
+    move b W == (maybe b (const $ b { score = score b - 1 }) (robotXY b))
 
 expandedCoords :: [[Cell]] -> Gen (Int,Int)
 expandedCoords cellLists = liftA2 (,) cols rows
@@ -90,3 +89,42 @@ instance Arbitrary Cell where
                                   Lift Open,
                                   Lift Closed,
                                   Lambda]
+
+simpleMap :: Gen Board
+simpleMap = do
+  b <- boringMap
+  (rx, ry) <- liftA2 (,) (choose (2, width b - 1)) (choose (2, height b - 1))
+  let top    = zip [1..width b] (repeat 1)
+      bottom = zip [1..width b] (repeat $ height b)
+      left   = zip (repeat 1)         [2..height b - 1]
+      right  = zip (repeat $ width b) [2..height b - 1]
+  (lx, ly) <- elements $ concat [top, bottom, left, right]
+  let b' = setCellAt b rx ry Robot
+      b'' = setCellAt b' lx ly (Lift Closed)
+  return b''
+
+lambdaGen :: Gen ((Int,Int),(Int,Int))
+lambdaGen = do
+  b <- boringMap
+  let top    = zip [1..width b] (repeat 1)
+      bottom = zip [1..width b] (repeat $ height b)
+      left   = zip (repeat 1)         [2..height b - 1]
+      right  = zip (repeat $ width b) [2..height b - 1]
+  els <- elements $ concat [top, bottom, left, right]
+  return ((width b,height b),els)
+
+boringMap :: Gen Board
+boringMap = do
+  w <- choose (2,100)
+  h <- choose (2,100)
+  rows <- vectorOf (h-2) (innerRow w)
+  let wall = (:[]) $ replicate w Wall
+  return $ board $ wall ++ rows ++ wall
+
+innerRow :: Int -> Gen [Cell]
+innerRow len = withEndWalls <$> vectorOf (len-2) (frequency elements)
+    where elements = [(5,return Empty),
+                      (2,return Earth),
+                      (2,return Rock),
+                      (1,return Lambda)]
+          withEndWalls xs = [Wall] ++ xs ++ [Wall]
