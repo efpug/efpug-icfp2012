@@ -31,7 +31,7 @@ getMoveFromStdin = do
   l <- hGetLine stdin
   return (case l of
              [] -> Nothing
-             x:xs -> charToMove x)
+             x:_ -> charToMove x)
     
 readBoard :: String -> IO Board
 readBoard file = board <$> readCellLists
@@ -39,7 +39,6 @@ readBoard file = board <$> readCellLists
           fileStr <- readFile file
           return (map stringToCells (lines fileStr))
 
--- Do nothing --
 gameLoop :: Move -> Board -> Board
 gameLoop ourMove board = 
   move board ourMove
